@@ -32,11 +32,11 @@ carat = st.number_input("Carat", min_value=float(df['carat'].min()), max_value=f
 cut = st.selectbox("Cut", options=le_cut.classes_)
 color = st.selectbox("Color", options=le_color.classes_)
 clarity = st.selectbox("Clarity", options=le_clarity.classes_)
-depth = st.number_input("Depth", min_value=float(df['depth'].min()), max_value=float(df['depth'].max()), value=float(df['depth'].mean()))
-table = st.number_input("Table", min_value=float(df['table'].min()), max_value=float(df['table'].max()), value=float(df['table'].mean()))
-x = st.number_input("x (mm)", min_value=float(df['x'].min()), max_value=float(df['x'].max()), value=float(df['x'].mean()))
-y_ = st.number_input("y (mm)", min_value=float(df['y'].min()), max_value=float(df['y'].max()), value=float(df['y'].mean()))
-z = st.number_input("z (mm)", min_value=float(df['z'].min()), max_value=float(df['z'].max()), value=float(df['z'].mean()))
+depth = st.slider("Depth", min_value=float(df['depth'].min()), max_value=float(df['depth'].max()), value=float(df['depth'].mean()))
+table = st.slider("Table", min_value=float(df['table'].min()), max_value=float(df['table'].max()), value=float(df['table'].mean()))
+x = st.slider("x (mm)", min_value=float(df['x'].min()), max_value=float(df['x'].max()), value=float(df['x'].mean()))
+y_ = st.slider("y (mm)", min_value=float(df['y'].min()), max_value=float(df['y'].max()), value=float(df['y'].mean()))
+z = st.slider("z (mm)", min_value=float(df['z'].min()), max_value=float(df['z'].max()), value=float(df['z'].mean()))
 
 # Prepare input for prediction
 input_dict = {
