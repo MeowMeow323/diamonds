@@ -1,5 +1,11 @@
 .streamlit/secrets.toml
 
+rf_model.joblib
+le_cut.joblib
+le_color.joblib
+le_clarity.joblib
+scaler.joblib
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
