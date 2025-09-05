@@ -2,7 +2,8 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
-from sklearn.model_selection import train_test_split
+
+from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.pipeline import Pipeline
 from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OrdinalEncoder
@@ -11,6 +12,9 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
 
 
+# ----------------------------
+# 1) Data loading & cleaning
+# ----------------------------
 def load_and_clean(csv_path: str) -> pd.DataFrame:
     df = pd.read_csv(csv_path)
 
@@ -35,7 +39,10 @@ def load_and_clean(csv_path: str) -> pd.DataFrame:
     return df
 
 
-def build_pipeline() -> Pipeline:
+# ----------------------------
+# 2) Pipeline builder
+# ----------------------------
+def build_pipeline() -> tuple[Pipeline, list[str]]:
     # Columns
     CATEG = ["cut", "color", "clarity"]
     NUM = ["carat", "depth", "table", "x", "y", "z", "volume"]
@@ -59,6 +66,7 @@ def build_pipeline() -> Pipeline:
         verbose_feature_names_out=False,
     )
 
+    # Base RF (will be overridden if tuning=True)
     rf = RandomForestRegressor(
         n_estimators=600,
         max_depth=None,
@@ -76,8 +84,55 @@ def build_pipeline() -> Pipeline:
     return pipe, CATEG + NUM
 
 
-def train(csv_path: str = "diamonds.csv", out_path: str = "diamond_price_pipeline.joblib"):
-    # 1) Load & clean
+# ----------------------------
+# 3) Optional compact GridSearch
+# ----------------------------
+def tune_random_forest(pipe: Pipeline, X_train: pd.DataFrame, y_train: pd.Series) -> Pipeline:
+    """
+    Small, fast grid like your notebook version:
+    1 × 2 × 1 × 2 × 1 × 2 = 8 combos × 3 folds = 24 fits
+    """
+    param_grid = {
+        "model__n_estimators": [100],     # fixed small for speed
+        "model__max_depth": [None, 20],   # shallow vs deep
+        "model__min_samples_split": [2],  # default
+        "model__min_samples_leaf": [1, 2],
+        "model__max_features": ["sqrt"],  # common default
+        "model__bootstrap": [True, False]
+    }
+
+    gs = GridSearchCV(
+        estimator=pipe,
+        param_grid=param_grid,
+        scoring="r2",
+        cv=3,
+        n_jobs=-1,
+        verbose=2
+    )
+    gs.fit(X_train, y_train)
+
+    print("Best RF params:", gs.best_params_)
+    print("Best RF CV R²:", gs.best_score_)
+
+    # Optionally refit with a larger forest for accuracy using the best params:
+    best_pipe = gs.best_estimator_
+    best_rf: RandomForestRegressor = best_pipe.named_steps["model"]
+    # bump trees for final model if you want a stronger fit
+    best_rf.set_params(n_estimators=300, n_jobs=-1, random_state=42)
+    best_pipe.fit(X_train, y_train)
+
+    return best_pipe
+
+
+# ----------------------------
+# 4) Train entrypoint
+# ----------------------------
+def train(
+    csv_path: str = "diamonds.csv",
+    out_path: str = "diamond_price_pipeline.joblib",
+    tuning: bool = True  # turn on to use the compact GridSearchCV
+):
+    # Load & clean
     df = load_and_clean(csv_path)
 
     TARGET = "price"
@@ -90,24 +145,27 @@ def train(csv_path: str = "diamonds.csv", out_path: str = "diamond_price_pipelin
         X, y, test_size=0.30, random_state=42, shuffle=True
     )
 
-    # 2) Fit
-    pipe.fit(X_train, y_train)
+    # Fit (with or without tuning)
+    if tuning:
+        pipe = tune_random_forest(pipe, X_train, y_train)
+    else:
+        pipe.fit(X_train, y_train)
 
-    # 3) Evaluate
+    # Evaluate
     y_pred = pipe.predict(X_test)
     mae = mean_absolute_error(y_test, y_pred)
     mse = mean_squared_error(y_test, y_pred)
     r2 = r2_score(y_test, y_pred)
-
     print(f"Random Forest — MAE: {mae:,.2f} | MSE: {mse:,.2f} | R²: {r2:.4f}")
 
-    # 4) Save single artifact (pipeline + metadata)
+    # Save bundle
     bundle = {
         "pipe": pipe,
         "features": features,
         "target": TARGET,
         "model": "RandomForestRegressor",
-        "version": 1,
+        "version": 2,  # bump version since we added tuning
+        "tuning": tuning
     }
     joblib.dump(bundle, out_path)
     print(f"Saved pipeline to: {Path(out_path).resolve()}")

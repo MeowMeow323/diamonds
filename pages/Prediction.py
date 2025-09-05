@@ -5,8 +5,11 @@ import joblib
 st.set_page_config(page_title="Diamond Price Predictor", layout="centered")
 st.title("💎 Diamond Price Prediction App")
 
-# Load the trained pipeline (preprocessing + model bundled)
-bundle = joblib.load("diamond_price_pipeline.joblib")
+@st.cache_resource
+def load_model():
+    return joblib.load("diamond_price_pipeline.joblib")
+
+bundle = load_model()
 pipe = bundle["pipe"]
 features = bundle["features"]
 
