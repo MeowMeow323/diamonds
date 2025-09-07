@@ -5,6 +5,60 @@ import joblib
 st.set_page_config(page_title="Diamond Price Predictor", layout="centered")
 st.title("💎 Diamond Price Prediction App")
 
+# Diamond Features Information Section
+with st.expander("ℹ️ Learn About Diamond Features"):
+    st.markdown("""
+    ### Diamond Quality Factors (The 4 Cs + Dimensions)
+    
+    **🔸 Carat Weight**
+    - Measures the diamond's weight (1 carat = 200 milligrams)
+    - Larger diamonds are rarer and more valuable
+    - Range: 0.1 - 5.0 carats (typical)
+    """)
+    
+    st.markdown("""
+    **✂️ Cut Quality**
+    - Refers to how well the diamond has been cut and polished
+    - Affects brilliance and sparkle
+    - Order (worst to best): Fair → Good → Very Good → Premium → Ideal
+    """)
+    
+    st.markdown("""
+    **🎨 Color Grade**
+    - Measures the absence of color in white diamonds
+    - Order (most color to colorless): J → I → H → G → F → E → D
+    - D is completely colorless and most valuable
+    """)
+    
+    # Diamond color grade image
+    st.image("assets/diamond_color.jpg", 
+             caption="Diamond color grades from J (tinted) to D (colorless)", width=675)
+    
+    st.markdown("""
+    **🔍 Clarity Grade**
+    - Measures internal flaws (inclusions) and surface blemishes
+    - Order (most flaws to flawless): I1 → SI2 → SI1 → VS2 → VS1 → VVS2 → VVS1 → IF
+    - IF (Internally Flawless) is the highest grade shown
+    """)
+    
+    # Diamond clarity image
+    st.image("assets/diamond_clarity.jpg", 
+             caption="Diamond clarity - fewer inclusions mean higher grades", width=675)
+    
+    st.markdown("""
+    **📏 Physical Dimensions**
+    - **Depth %**: Total depth percentage (depth/average diameter × 100)
+    - **Table %**: Width of the top facet relative to the widest point
+    - **x, y, z (mm)**: Length, width, and depth measurements
+    - **Volume**: Calculated as x × y × z, affects the diamond's visual size
+    """)
+    
+    # Diamond proportions diagram
+    st.image("https://images.unsplash.com/photo-1596944946317-7c07d4ea2b5d?w=600&h=300&fit=crop", 
+             caption="Diamond proportions: depth, table, and dimensions affect appearance", width=400)
+    
+    st.markdown("*Tip: Well-balanced proportions enhance a diamond's beauty and value!*")
+
 @st.cache_resource
 def load_model():
     return joblib.load("diamond_price_pipeline.joblib")

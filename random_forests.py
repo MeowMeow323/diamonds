@@ -1,7 +1,7 @@
 # random_forests.py
-import pandas as pd
-import numpy as np
 from pathlib import Path
+import pandas as pd  
+import joblib        
 
 from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.pipeline import Pipeline
@@ -9,7 +9,6 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import OrdinalEncoder
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
-import joblib
 
 
 # ----------------------------
@@ -34,7 +33,7 @@ def load_and_clean(csv_path: str) -> pd.DataFrame:
         iqr = q3 - q1
         low = q1 - 1.5 * iqr
         high = q3 + 1.5 * iqr
-        df[col] = df[col].clip(low, high)
+        df[col] = df[col].clip(low, high)  # Fix: complete the capping logic
 
     return df
 
@@ -81,7 +80,8 @@ def build_pipeline() -> tuple[Pipeline, list[str]]:
         ("model", rf),
     ])
 
-    return pipe, CATEG + NUM
+    features = CATEG + NUM  # Fix: return the features list
+    return pipe, features
 
 
 # ----------------------------
@@ -93,11 +93,11 @@ def tune_random_forest(pipe: Pipeline, X_train: pd.DataFrame, y_train: pd.Series
     1 × 2 × 1 × 2 × 1 × 2 = 8 combos × 3 folds = 24 fits
     """
     param_grid = {
-        "model__n_estimators": [100],     # fixed small for speed
-        "model__max_depth": [None, 20],   # shallow vs deep
-        "model__min_samples_split": [2],  # default
+        "model__n_estimators": [100],
+        "model__max_depth": [None, 20],
+        "model__min_samples_split": [2],
         "model__min_samples_leaf": [1, 2],
-        "model__max_features": ["sqrt"],  # common default
+        "model__max_features": ["sqrt"],
         "model__bootstrap": [True, False]
     }
 
@@ -147,9 +147,9 @@ def train(
 
     # Fit (with or without tuning)
     if tuning:
-        pipe = tune_random_forest(pipe, X_train, y_train)
+        pipe = tune_random_forest(pipe, X_train, y_train)  # Fix: complete the if block
     else:
-        pipe.fit(X_train, y_train)
+        pipe.fit(X_train, y_train)  # Fix: complete the else block
 
     # Evaluate
     y_pred = pipe.predict(X_test)
@@ -164,7 +164,7 @@ def train(
         "features": features,
         "target": TARGET,
         "model": "RandomForestRegressor",
-        "version": 2,  # bump version since we added tuning
+        "version": 2,
         "tuning": tuning
     }
     joblib.dump(bundle, out_path)

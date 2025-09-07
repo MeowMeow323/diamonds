@@ -1,4 +1,5 @@
 .streamlit/secrets.toml
+.DS_Store
 
 rf_model.joblib
 le_cut.joblib
